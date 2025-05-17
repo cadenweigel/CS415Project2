@@ -12,7 +12,6 @@
 void trim_newline(char *str);
 int read_input_file(const char *filename, char lines[][MAX_LINE]);
 void parse_command(char *line, char **args);
-pid_t spawn_process(char **args);
 void wait_for_children(pid_t *pids, int count);
 
 //created for part2
@@ -139,22 +138,6 @@ void parse_command(char *line, char **args) {
         token = strtok(NULL, " ");
     }
     args[i] = NULL;
-}
-
-pid_t spawn_process(char **args) {
-    //forks and executes a command using execvp, returning the child process' PID
-    pid_t pid = fork(); //create a new process
-    if (pid < 0) { //if fork() returns -1 an error occurred
-        perror("fork");
-        exit(EXIT_FAILURE);
-    } else if (pid == 0) {
-        //child process executes command 
-        printf("Child process PID %d executing: %s\n", getpid(), args[0]);
-        execvp(args[0], args); //replace the current process image with the new program
-        perror("execvp"); //if execvp returns, it failed
-        exit(EXIT_FAILURE);
-    }
-    return pid; //parent process returns child process PID
 }
 
 void wait_for_children(pid_t *pids, int count) {

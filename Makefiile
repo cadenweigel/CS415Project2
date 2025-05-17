@@ -17,8 +17,5 @@ part3: part3.c
 part4: part4.c
 	$(CC) $(CFLAGS) -o part4 part4.c
 
-part5: part5.c
-	$(CC) $(CFLAGS) -o part5 part5.c
-
 clean:
 	rm -f $(PARTS)

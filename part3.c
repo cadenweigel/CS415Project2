@@ -19,8 +19,6 @@ int current = 0;
 void trim_newline(char *str);
 int read_input_file(const char *filename, char lines[][MAX_LINE]);
 void parse_command(char *line, char **args);
-pid_t spawn_process(char **args);
-void wait_for_children(pid_t *pids, int count);
 
 //created for part2
 void setup_sigusr1_blocking(sigset_t *sigset); //sets up signal blocking so child processes can wait for SIGUSR1
@@ -80,24 +78,28 @@ int main() {
 void alarm_handler(int signum) {
     if (count == 0) return;
 
-    //stop the current one
+    //stop the current process if it's still running
     if (!is_finished[current]) {
         kill(pids[current], SIGSTOP);
         printf("MCP: Stopped process %d\n", pids[current]);
     }
 
-    //move to next active
+    //find the next active (unfinished) process
     int next = (current + 1) % count;
     while (is_finished[next]) {
         next = (next + 1) % count;
-        if (next == current) return; //no active processes left
+        if (next == current) {
+            //all processes are finished or nothing left to schedule
+            alarm(0); //cancel further alarms
+            return;
+        }
     }
 
     current = next;
     kill(pids[current], SIGCONT);
     printf("MCP: Continued process %d\n", pids[current]);
 
-    alarm(1); //schedule next alarm
+    alarm(1); //schedule the next alarm
 }
 
 
@@ -133,6 +135,7 @@ pid_t fork_child_process(char *line, sigset_t *sigset) {
         execvp(args[0], args);
 
         perror("execvp"); //if execvp fails (if it returns)
+        fprintf(stderr, "Child %d failed to exec command: %s\n", getpid(), args[0]);
         exit(EXIT_FAILURE);
     }
 
@@ -200,25 +203,3 @@ void parse_command(char *line, char **args) {
     args[i] = NULL;
 }
 
-pid_t spawn_process(char **args) {
-    //forks and executes a command using execvp, returning the child process' PID
-    pid_t pid = fork(); //create a new process
-    if (pid < 0) { //if fork() returns -1 an error occurred
-        perror("fork");
-        exit(EXIT_FAILURE);
-    } else if (pid == 0) {
-        //child process executes command 
-        printf("Child process PID %d executing: %s\n", getpid(), args[0]);
-        execvp(args[0], args); //replace the current process image with the new program
-        perror("execvp"); //if execvp returns, it failed
-        exit(EXIT_FAILURE);
-    }
-    return pid; //parent process returns child process PID
-}
-
-void wait_for_children(pid_t *pids, int count) {
-    //waits for all child processes to terminate
-    for (int i = 0; i < count; i++) {
-        waitpid(pids[i], NULL, 0);
-    }
-}

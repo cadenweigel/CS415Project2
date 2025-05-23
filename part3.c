@@ -28,11 +28,16 @@ void signal_children(pid_t *pids, int count); //sends SIGUSR1, SIGSTOP, and SIGC
 //created for part3
 void alarm_handler(int signum);
 
-int main() {
+int main(int argc, char *argv[]) {
 
     sigset_t sigset;
     setup_sigusr1_blocking(&sigset);  //setup signal blocking so child processes can use sigwait() to pause before exec
-    count = read_input_file("input.txt", lines); //store inputs in lines and get count
+    if (argc != 2) {
+        fprintf(stderr, "Usage: %s <input_file>\n", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+    const char *filename = argv[1];
+    int line_count = read_input_file(filename, lines); //store inputs in lines and get count
 
     for (int i = 0; i < count; i++) {
         if (strlen(lines[i]) == 0) continue;

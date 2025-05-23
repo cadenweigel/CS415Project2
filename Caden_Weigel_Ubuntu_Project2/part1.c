@@ -26,7 +26,6 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    const char *filename = argv[1];
     char lines[MAX_CMDS][MAX_LINE]; //stores lines from input file
     char *args[MAX_ARGS]; //stores parsed arguments
     pid_t pids[MAX_CMDS]; //stores child process PIDs

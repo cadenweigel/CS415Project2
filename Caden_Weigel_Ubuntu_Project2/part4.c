@@ -42,12 +42,7 @@ int main(int argc, char *argv[]) {
     struct sigaction sa;
 
     setup_sigusr1_blocking(&sigset);
-    if (argc != 2) {
-        fprintf(stderr, "Usage: %s <input_file>\n", argv[0]);
-        exit(EXIT_FAILURE);
-    }
-    const char *filename = argv[1];
-    int line_count = read_input_file(filename, lines); //store inputs in lines and get count
+    int line_count = read_input_file("input.txt", lines);
 
     for (int i = 0; i < line_count; ++i) {
         if (strlen(lines[i]) == 0) continue;

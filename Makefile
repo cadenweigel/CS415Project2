@@ -1,7 +1,7 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -g
 
-PARTS = part1 part2 part3 part4 part5
+PARTS = part1 part2 part3 part4
 
 all: $(PARTS)
 

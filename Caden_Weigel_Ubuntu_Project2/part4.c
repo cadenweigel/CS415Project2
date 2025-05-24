@@ -53,7 +53,11 @@ int main(int argc, char *argv[]) {
 
     for (int i = 0; i < line_count; ++i) {
         if (strlen(lines[i]) == 0) continue;
-        fork_child_process(lines[i], &sigset);
+        pid_t pid = fork_child_process(lines[i], &sigset);
+        processes[proc_count].pid = pid;
+        strncpy(processes[proc_count].cmd, lines[i], MAX_LINE);
+        processes[proc_count].finished = 0;
+        proc_count++;
     }
 
     for (int i = 0; i < proc_count; i++) {

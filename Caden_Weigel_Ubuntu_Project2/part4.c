@@ -24,7 +24,7 @@ pid_t fork_child_process(char *line, sigset_t *sigset); //forks a new child proc
 
 //created for part4
 void print_proc_stats(pid_t pid);
-void handle_alarm(int sig);
+void handle_alarm();
 
 typedef struct {
     pid_t pid;
@@ -37,12 +37,19 @@ int proc_count = 0;
 int current = -1;
 
 int main(int argc, char *argv[]) {
+
+    if (argc != 2) {
+        fprintf(stderr, "Usage: %s <input_file>\n", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
     char lines[MAX_CMDS][MAX_LINE];
     sigset_t sigset;
     struct sigaction sa;
 
     setup_sigusr1_blocking(&sigset);
-    int line_count = read_input_file("input.txt", lines);
+    char *filename = argv[1];
+    int line_count = read_input_file(filename, lines); //store inputs in lines and get count
 
     for (int i = 0; i < line_count; ++i) {
         if (strlen(lines[i]) == 0) continue;
@@ -173,7 +180,7 @@ void print_proc_stats(pid_t pid) {
     snprintf(path, sizeof(path), "/proc/%d/stat", pid);
     fp = fopen(path, "r");
     if (fp) {
-        unsigned long utime, stime, rss;
+        unsigned long utime, stime;
         int ignore;
         char comm[256];
         fscanf(fp, "%d %s", &ignore, comm);
@@ -196,7 +203,7 @@ void print_proc_stats(pid_t pid) {
     }
 }
 
-void handle_alarm(int sig) {
+void handle_alarm() {
     //signal handler for SIGALRM to simulate time-slice switching
     if (current >= 0 && !processes[current].finished) {
         kill(processes[current].pid, SIGSTOP);

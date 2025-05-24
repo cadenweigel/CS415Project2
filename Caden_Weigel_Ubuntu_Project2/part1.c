@@ -29,6 +29,7 @@ int main(int argc, char *argv[]) {
     char lines[MAX_CMDS][MAX_LINE]; //stores lines from input file
     char *args[MAX_ARGS]; //stores parsed arguments
     pid_t pids[MAX_CMDS]; //stores child process PIDs
+    char *filename = argv[1];
     int line_count = read_input_file(filename, lines); //store inputs in lines and get count
     int pid_count = 0;
 

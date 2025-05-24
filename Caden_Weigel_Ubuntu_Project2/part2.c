@@ -20,13 +20,20 @@ pid_t fork_child_process(char *line, sigset_t *sigset); //forks a new child proc
 void signal_children(pid_t *pids, int count); //sends SIGUSR1, SIGSTOP, and SIGCONT to all child processes
 
 int main(int argc, char *argv[]) {
+
+    if (argc != 2) {
+        fprintf(stderr, "Usage: %s <input_file>\n", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
     char lines[MAX_CMDS][MAX_LINE]; //stores lines read from input.txt
     pid_t pids[MAX_CMDS];           //stores child process PIDs
     sigset_t sigset;                //signal set for SIGUSR1
 
     setup_sigusr1_blocking(&sigset); //block SIGUSR1 so that child processes can wait on it using sigwait()
 
-    int line_count = read_input_file("input.txt", lines); //store inputs in lines and get count
+    char *filename = argv[1];
+    int line_count = read_input_file(filename, lines); //store inputs in lines and get count
     int pid_count = 0;
 
     //fork a child process for each command

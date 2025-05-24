@@ -12,7 +12,6 @@
 char lines[MAX_CMDS][MAX_LINE];
 pid_t pids[MAX_CMDS];
 int is_finished[MAX_CMDS] = {0};
-int count = 0;
 int current = 0;
 
 //created for part1
@@ -26,20 +25,26 @@ pid_t fork_child_process(char *line, sigset_t *sigset); //forks a new child proc
 void signal_children(pid_t *pids, int count); //sends SIGUSR1, SIGSTOP, and SIGCONT to all child processes
 
 //created for part3
-void alarm_handler(int signum);
+void alarm_handler(int line_count);
 
 int main(int argc, char *argv[]) {
 
+    if (argc != 2) {
+        fprintf(stderr, "Usage: %s <input_file>\n", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
     sigset_t sigset;
     setup_sigusr1_blocking(&sigset);  //setup signal blocking so child processes can use sigwait() to pause before exec
-    count = read_input_file("input.txt", lines); //store inputs in lines and get count
+    char *filename = argv[1];
+    int line_count = read_input_file(filename, lines); //store inputs in lines and get count
 
-    for (int i = 0; i < count; i++) {
+    for (int i = 0; i < line_count; i++) {
         if (strlen(lines[i]) == 0) continue;
         pids[i] = fork_child_process(lines[i], &sigset); //fork a child process for each command and store their PIDs
     }
 
-    signal_children(pids, count); //send SIGUSR1 to children to unblock them so they exec(), then SIGSTOP to pause them
+    signal_children(pids, line_count); //send SIGUSR1 to children to unblock them so they exec(), then SIGSTOP to pause them
 
     //SIGALRM handler
     struct sigaction sa;
@@ -53,7 +58,7 @@ int main(int argc, char *argv[]) {
     //monitor child processes
     while (1) {
         int all_done = 1;
-        for (int i = 0; i < count; i++) { //loop through all children to check if they've exited
+        for (int i = 0; i < line_count; i++) { //loop through all children to check if they've exited
             if (!is_finished[i]) {
                 int status;
                 pid_t result = waitpid(pids[i], &status, WNOHANG);
@@ -75,8 +80,8 @@ int main(int argc, char *argv[]) {
 
 }
 
-void alarm_handler(int signum) {
-    if (count == 0) return;
+void alarm_handler(int line_count) {
+    if (line_count == 0) return;
 
     //stop the current process if it's still running
     if (!is_finished[current]) {
@@ -85,9 +90,9 @@ void alarm_handler(int signum) {
     }
 
     //find the next active (unfinished) process
-    int next = (current + 1) % count;
+    int next = (current + 1) % line_count;
     while (is_finished[next]) {
-        next = (next + 1) % count;
+        next = (next + 1) % line_count;
         if (next == current) {
             //all processes are finished or nothing left to schedule
             alarm(0); //cancel further alarms
